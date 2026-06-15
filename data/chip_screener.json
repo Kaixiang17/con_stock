@@ -1,7 +1,13 @@
 {
   "ok": true,
-  "source": "尚未更新，請到 GitHub Actions 手動執行 Update Chip Screener Data",
-  "generatedAt": "2026-01-01T00:00:00.000Z",
+  "source": "Peicheng 籌碼集中度 + Yahoo Finance 日K",
+  "note": {
+    "chipRule": "1日>20%、5日>15%、10日>10%、20日>5% 視為籌碼明確集中參考。",
+    "strategyA": "10日集中度高 + 剛站上所有均線 + 沒有噴太遠，偏剛轉強。",
+    "strategyB": "20日集中度高 + MA20上彎 + 量沒有失控爆太大，偏慢慢墊高。",
+    "liquidity": "成交量過小容易讓籌碼集中度失真，預設用10日均量500張作為基本門檻。"
+  },
+  "generatedAt": "2026-06-15T03:00:00.066Z",
   "count": 0,
   "rows": []
 }
