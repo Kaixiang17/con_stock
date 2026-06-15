@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>籌碼集中度主力偷買篩選器</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", Arial, sans-serif;
+      background: #08111f;
+      color: #e5e7eb;
+    }
+
+    .wrap {
+      max-width: 1360px;
+      margin: 0 auto;
+      padding: 26px 16px 60px;
+    }
+
+    .hero {
+      border-radius: 24px;
+      padding: 24px;
+      background:
+        radial-gradient(circle at top left, rgba(14, 165, 233, .25), transparent 32%),
+        linear-gradient(135deg, #111827, #172554);
+      border: 1px solid rgba(255,255,255,.1);
+      box-shadow: 0 24px 60px rgba(0,0,0,.35);
+    }
+
+    .topline {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 30px;
+      letter-spacing: .5px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 11px;
+      border-radius: 999px;
+      background: rgba(34,197,94,.15);
+      color: #86efac;
+      border: 1px solid rgba(34,197,94,.22);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .sub {
+      margin-top: 10px;
+      color: #a9b4c7;
+      line-height: 1.7;
+      font-size: 15px;
+    }
+
+    .rules {
+      margin-top: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .rule {
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.07);
+      color: #cbd5e1;
+      font-size: 13px;
+      border: 1px solid rgba(255,255,255,.08);
+    }
+
+    .controls {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: repeat(6, minmax(120px, 1fr));
+      gap: 12px;
+    }
+
+    .box {
+      background: rgba(255,255,255,.065);
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: 16px;
+      padding: 12px;
+    }
+
+    label {
+      display: block;
+      color: #aeb6c8;
+      font-size: 13px;
+      margin-bottom: 7px;
+    }
+
+    select, input {
+      width: 100%;
+      border: 1px solid rgba(255,255,255,.14);
+      background: #0f172a;
+      color: #fff;
+      border-radius: 12px;
+      padding: 10px;
+      outline: none;
+    }
+
+    .actions {
+      margin-top: 16px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    button {
+      border: 0;
+      background: linear-gradient(135deg, #f59e0b, #f97316);
+      color: #111827;
+      font-weight: 900;
+      padding: 12px 18px;
+      border-radius: 14px;
+      cursor: pointer;
+      box-shadow: 0 10px 30px rgba(249,115,22,.25);
+    }
+
+    button.secondary {
+      background: rgba(255,255,255,.08);
+      color: #e5e7eb;
+      border: 1px solid rgba(255,255,255,.13);
+      box-shadow: none;
+    }
+
+    .hint {
+      color: #9ca3af;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .stats {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+    }
+
+    .stat {
+      background: rgba(255,255,255,.065);
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: 18px;
+      padding: 16px;
+    }
+
+    .stat .num {
+      color: #fbbf24;
+      font-size: 25px;
+      font-weight: 900;
+    }
+
+    .stat .txt {
+      margin-top: 4px;
+      color: #9ca3af;
+      font-size: 13px;
+    }
+
+    .table-wrap {
+      margin-top: 18px;
+      overflow-x: auto;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,.09);
+      background: rgba(15,23,42,.75);
+    }
+
+    table {
+      width: 100%;
+      min-width: 1450px;
+      border-collapse: collapse;
+    }
+
+    th {
+      text-align: left;
+      background: #111827;
+      color: #cbd5e1;
+      font-size: 13px;
+      padding: 13px 10px;
+      white-space: nowrap;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    td {
+      border-top: 1px solid rgba(255,255,255,.075);
+      padding: 12px 10px;
+      font-size: 14px;
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+
+    tr:hover td { background: rgba(255,255,255,.04); }
+
+    a {
+      color: #60a5fa;
+      text-decoration: none;
+      font-weight: 800;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      margin-right: 4px;
+      margin-bottom: 3px;
+    }
+
+    .good {
+      background: rgba(34,197,94,.16);
+      color: #86efac;
+      border: 1px solid rgba(34,197,94,.25);
+    }
+
+    .blue {
+      background: rgba(59,130,246,.16);
+      color: #93c5fd;
+      border: 1px solid rgba(59,130,246,.25);
+    }
+
+    .warn {
+      background: rgba(245,158,11,.16);
+      color: #fcd34d;
+      border: 1px solid rgba(245,158,11,.25);
+    }
+
+    .bad {
+      background: rgba(239,68,68,.15);
+      color: #fca5a5;
+      border: 1px solid rgba(239,68,68,.25);
+    }
+
+    .muted { color: #9ca3af; }
+
+    .loading, .error {
+      margin-top: 18px;
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .loading {
+      color: #fbbf24;
+      background: rgba(245,158,11,.11);
+      border: 1px solid rgba(245,158,11,.18);
+    }
+
+    .error {
+      color: #fca5a5;
+      background: rgba(239,68,68,.12);
+      border: 1px solid rgba(239,68,68,.2);
+    }
+
+    .mini {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    @media (max-width: 950px) {
+      .controls { grid-template-columns: repeat(2, 1fr); }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      h1 { font-size: 24px; }
+      .hero { padding: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <div class="topline">
+        <div>
+          <h1>籌碼集中度主力偷買篩選器</h1>
+          <div class="sub">
+            主打兩種型態：
+            <b>10日集中度高 + 剛站上所有均線 + 沒有噴太遠</b>，
+            以及 <b>20日集中度高 + MA20 上彎 + 量沒有失控爆太大</b>。
+            預設優先看科技類股，其次看比較穩定的族群。
+          </div>
+        </div>
+        <div class="badge">GitHub Pages 版</div>
+      </div>
+
+      <div class="rules">
+        <div class="rule">1日集中度 &gt; 20%</div>
+        <div class="rule">5日集中度 &gt; 15%</div>
+        <div class="rule">10日集中度 &gt; 10%</div>
+        <div class="rule">20日集中度 &gt; 5%</div>
+        <div class="rule">10日均量過低容易失真</div>
+      </div>
+
+      <div class="controls">
+        <div class="box">
+          <label>策略</label>
+          <select id="strategy">
+            <option value="both" selected>兩種都看</option>
+            <option value="a">剛轉強：10日集中 + 剛站上</option>
+            <option value="b">慢慢墊高：20日集中 + MA20上彎</option>
+            <option value="watch">觀察全部</option>
+          </select>
+        </div>
+
+        <div class="box">
+          <label>族群</label>
+          <select id="category">
+            <option value="techStable" selected>科技或穩定優先</option>
+            <option value="tech">只看科技</option>
+            <option value="stable">只看穩定</option>
+            <option value="all">全部</option>
+          </select>
+        </div>
+
+        <div class="box">
+          <label>最低 10日集中度</label>
+          <input id="minConc10" type="number" value="10" step="1" />
+        </div>
+
+        <div class="box">
+          <label>最低 20日集中度</label>
+          <input id="minConc20" type="number" value="5" step="1" />
+        </div>
+
+        <div class="box">
+          <label>最低 10日均量</label>
+          <input id="minAvgVol10" type="number" value="500" step="100" />
+        </div>
+
+        <div class="box">
+          <label>排序</label>
+          <select id="sortMode">
+            <option value="score" selected>綜合分數</option>
+            <option value="conc10">10日集中度</option>
+            <option value="conc20">20日集中度</option>
+            <option value="volRatio">量比</option>
+            <option value="stretch">離均線最近</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button onclick="applyFilter()">重新篩選</button>
+        <button class="secondary" onclick="resetFilter()">恢復預設</button>
+        <button class="secondary" onclick="downloadCSV()">下載 CSV</button>
+        <span id="updatedAt" class="hint">資料讀取中...</span>
+      </div>
+
+      <div id="loading" class="loading">正在讀取 data/chip_screener.json...</div>
+      <div id="error" class="error" style="display:none;"></div>
+
+      <div class="stats">
+        <div class="stat">
+          <div id="statCount" class="num">-</div>
+          <div class="txt">符合股票數</div>
+        </div>
+        <div class="stat">
+          <div id="statA" class="num">-</div>
+          <div class="txt">剛轉強</div>
+        </div>
+        <div class="stat">
+          <div id="statB" class="num">-</div>
+          <div class="txt">慢慢墊高</div>
+        </div>
+        <div class="stat">
+          <div id="statTech" class="num">-</div>
+          <div class="txt">科技類股</div>
+        </div>
+        <div class="stat">
+          <div id="statStable" class="num">-</div>
+          <div class="txt">穩定類股</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>排名</th>
+            <th>代碼</th>
+            <th>股票</th>
+            <th>族群</th>
+            <th>訊號</th>
+            <th>收盤</th>
+            <th>1日</th>
+            <th>5日</th>
+            <th>10日</th>
+            <th>20日</th>
+            <th>10日均量</th>
+            <th>距均線牆 / MA20</th>
+            <th>量比</th>
+            <th>MA5</th>
+            <th>MA10</th>
+            <th>MA20</th>
+            <th>MA60</th>
+            <th>MA120</th>
+            <th>條件</th>
+            <th>分數</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr>
+            <td colspan="20" class="muted">資料載入中...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="mini">
+      免責：此工具只做籌碼與技術面篩選，不構成投資建議。集中度高不代表一定上漲，請搭配K線型態、產業消息、千張大戶、借券與券商分點觀察。
+    </p>
+  </div>
+
+  <script>
+    let allRows = [];
+    let currentRows = [];
+
+    function fmt(v, d = 2) {
+      if (v === null || v === undefined || Number.isNaN(Number(v))) return "-";
+      return Number(v).toFixed(d);
+    }
+
+    function fmt0(v) {
+      if (v === null || v === undefined || Number.isNaN(Number(v))) return "-";
+      return Number(v).toLocaleString("zh-TW", { maximumFractionDigits: 0 });
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function pill(type, text) {
+      return `<span class="pill ${type}">${text}</span>`;
+    }
+
+    function getNumber(id) {
+      return Number(document.getElementById(id).value || 0);
+    }
+
+    function filterRows() {
+      const strategy = document.getElementById("strategy").value;
+      const category = document.getElementById("category").value;
+      const minConc10 = getNumber("minConc10");
+      const minConc20 = getNumber("minConc20");
+      const minAvgVol10 = getNumber("minAvgVol10");
+
+      return allRows.filter((x) => {
+        if ((x.avgVol10 ?? 0) < minAvgVol10) return false;
+
+        if (strategy === "a" && !x.strategyA) return false;
+        if (strategy === "b" && !x.strategyB) return false;
+        if (strategy === "both" && !x.strategyA && !x.strategyB) return false;
+
+        if ((x.conc10 ?? 0) < minConc10 && (x.conc20 ?? 0) < minConc20) return false;
+
+        if (category === "tech" && x.category !== "科技") return false;
+        if (category === "stable" && x.category !== "穩定") return false;
+        if (category === "techStable" && !["科技", "穩定"].includes(x.category)) return false;
+
+        return true;
+      });
+    }
+
+    function sortRows(rows) {
+      const mode = document.getElementById("sortMode").value;
+      const arr = [...rows];
+
+      if (mode === "conc10") return arr.sort((a, b) => (b.conc10 ?? -999) - (a.conc10 ?? -999));
+      if (mode === "conc20") return arr.sort((a, b) => (b.conc20 ?? -999) - (a.conc20 ?? -999));
+      if (mode === "volRatio") return arr.sort((a, b) => (b.volRatio ?? 0) - (a.volRatio ?? 0));
+      if (mode === "stretch") return arr.sort((a, b) => Math.abs(a.stretch ?? 999) - Math.abs(b.stretch ?? 999));
+
+      return arr.sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+    }
+
+    function render(rows) {
+      const tbody = document.getElementById("tbody");
+      currentRows = rows;
+
+      document.getElementById("statCount").textContent = rows.length;
+      document.getElementById("statA").textContent = rows.filter(x => x.strategyA).length;
+      document.getElementById("statB").textContent = rows.filter(x => x.strategyB).length;
+      document.getElementById("statTech").textContent = rows.filter(x => x.category === "科技").length;
+      document.getElementById("statStable").textContent = rows.filter(x => x.category === "穩定").length;
+
+      if (!rows.length) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="20" class="muted">
+              沒有符合條件。可以把策略改成「觀察全部」、降低 10日/20日集中度，或降低最低 10日均量。
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = rows.map((x, i) => {
+        const link = `https://tw.stock.yahoo.com/quote/${encodeURIComponent(x.symbol)}`;
+
+        const categoryTag =
+          x.category === "科技" ? pill("blue", "科技") :
+          x.category === "穩定" ? pill("good", "穩定") :
+          pill("warn", "其他");
+
+        const signalTag =
+          x.signal === "剛轉強" ? pill("good", "剛轉強") :
+          x.signal === "慢慢墊高" ? pill("blue", "慢慢墊高") :
+          x.signal === "剛轉強 + 慢慢墊高" ? pill("good", "雙訊號") :
+          pill("warn", "觀察");
+
+        const conditions = [
+          x.chip10Ok ? pill("good", "10日集中") : pill("warn", "10日未達標"),
+          x.chip20Ok ? pill("good", "20日集中") : pill("warn", "20日未達標"),
+          x.aboveAll ? pill("good", "站上均線") : pill("bad", "未站上"),
+          x.justAboveAll ? pill("good", "剛站上") : pill("warn", "非剛站上"),
+          x.ma20Up ? pill("good", "MA20上彎") : pill("warn", "MA20普通"),
+          x.volumeControlled ? pill("good", "量正常") : x.volumeTooCrazy ? pill("bad", "爆太大") : pill("warn", "量不足")
+        ].join("");
+
+        return `
+          <tr>
+            <td>${i + 1}</td>
+            <td><a href="${link}" target="_blank" rel="noopener">${escapeHtml(x.code)}</a></td>
+            <td>${escapeHtml(x.name)}</td>
+            <td>${categoryTag}</td>
+            <td>${signalTag}</td>
+            <td>${fmt(x.close)}</td>
+            <td>${fmt(x.conc1)}%</td>
+            <td>${fmt(x.conc5)}%</td>
+            <td><b>${fmt(x.conc10)}%</b></td>
+            <td><b>${fmt(x.conc20)}%</b></td>
+            <td>${fmt0(x.avgVol10)}</td>
+            <td>${fmt(x.stretch)}%</td>
+            <td>${fmt(x.volRatio)}x</td>
+            <td>${fmt(x.ma5)}</td>
+            <td>${fmt(x.ma10)}</td>
+            <td>${fmt(x.ma20)}</td>
+            <td>${fmt(x.ma60)}</td>
+            <td>${fmt(x.ma120)}</td>
+            <td>${conditions}</td>
+            <td><b>${fmt(x.score, 1)}</b></td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function applyFilter() {
+      render(sortRows(filterRows()));
+    }
+
+    function resetFilter() {
+      document.getElementById("strategy").value = "both";
+      document.getElementById("category").value = "techStable";
+      document.getElementById("minConc10").value = 10;
+      document.getElementById("minConc20").value = 5;
+      document.getElementById("minAvgVol10").value = 500;
+      document.getElementById("sortMode").value = "score";
+      applyFilter();
+    }
+
+    function downloadCSV() {
+      if (!currentRows.length) return;
+
+      const headers = [
+        "排名", "代碼", "名稱", "族群", "訊號", "收盤", "1日集中度", "5日集中度", "10日集中度", "20日集中度",
+        "10日均量", "距均線牆或MA20%", "量比", "MA5", "MA10", "MA20", "MA60", "MA120", "分數"
+      ];
+
+      const lines = [headers.join(",")];
+      currentRows.forEach((x, i) => {
+        const row = [
+          i + 1, x.code, x.name, x.category, x.signal, x.close, x.conc1, x.conc5, x.conc10, x.conc20,
+          x.avgVol10, x.stretch, x.volRatio, x.ma5, x.ma10, x.ma20, x.ma60, x.ma120, x.score
+        ];
+        lines.push(row.map(v => `"${String(v ?? "").replaceAll('"', '""')}"`).join(","));
+      });
+
+      const blob = new Blob(["\ufeff" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "chip_screener.csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    async function loadData() {
+      const loading = document.getElementById("loading");
+      const error = document.getElementById("error");
+
+      try {
+        const res = await fetch(`data/chip_screener.json?t=${Date.now()}`);
+        const data = await res.json();
+
+        if (!data.ok) throw new Error("資料格式錯誤");
+        allRows = data.rows || [];
+
+        const time = new Date(data.generatedAt);
+        document.getElementById("updatedAt").textContent =
+          `資料更新時間：${time.toLocaleString("zh-TW")}，來源：${data.source}`;
+
+        loading.style.display = "none";
+        applyFilter();
+      } catch (err) {
+        loading.style.display = "none";
+        error.style.display = "block";
+        error.textContent =
+          "讀不到 data/chip_screener.json。請先到 GitHub Actions 手動執行一次 Update Chip Screener Data。";
+      }
+    }
+
+    document.querySelectorAll("select, input").forEach((el) => {
+      el.addEventListener("change", applyFilter);
+    });
+
+    loadData();
+  </script>
+</body>
+</html>
