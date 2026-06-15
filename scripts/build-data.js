@@ -378,7 +378,7 @@ function analyzeStock(base, chartPayload) {
     strategyB,
     signal,
     score: round(score, 1)
-  };
+  };  const baseList = chipRows
 }
 
 async function main() {
